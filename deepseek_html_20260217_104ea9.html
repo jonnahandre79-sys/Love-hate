@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>love / hate · emotional chaos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #e8d1d1; /* base, will be overridden by js */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            padding: 16px;
+            transition: background 0.4s ease;
+        }
+
+        .game-box {
+            background: rgba(255, 240, 245, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 80px 80px 50px 50px;
+            border: 3px solid white;
+            box-shadow: 0 20px 0 #a66b8b, 0 25px 30px #dbb0b0;
+            padding: 30px 25px 35px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: #6b3e4f;
+            text-shadow: 3px 3px 0 #ffdbdb;
+            margin-bottom: 5px;
+        }
+
+        .scores {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .love-score, .hate-score {
+            background: #ffeef2;
+            border: 3px solid white;
+            border-radius: 60px;
+            padding: 12px 35px;
+            box-shadow: 0 7px 0 #b8768b;
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .love-score { color: #c72e5a; }
+        .hate-score { color: #1f6c9c; }
+
+        .play-area {
+            background: #ffe4ec;
+            border: 5px solid white;
+            border-radius: 90px 90px 50px 50px;
+            box-shadow: inset 0 -6px 0 #cfa3b4, 0 15px 0 #846b7c;
+            min-height: 360px;
+            padding: 20px;
+            margin: 10px 0 15px;
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .big-btn {
+            border: 4px solid white;
+            color: white;
+            font-size: 1.7rem;
+            font-weight: 700;
+            padding: 16px 25px;
+            border-radius: 80px;
+            cursor: pointer;
+            box-shadow: 0 9px 0 #5e3f4f, 0 5px 15px #b38686;
+            transition: transform 0.05s, box-shadow 0.1s, left 0.2s, top 0.2s, background 0.2s;
+            letter-spacing: 0.5px;
+            min-width: 240px;
+            max-width: 90%;
+            margin: 8px;
+            flex-shrink: 0;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+        .big-btn:active { transform: scale(0.94); box-shadow: 0 4px 0 #4b3440; }
+
+        .love-btn { background: #ff5277; }
+        .hate-btn { background: #3478a7; }
+
+        .big-message {
+            background: #fff3fd;
+            border: 4px solid white;
+            border-radius: 60px;
+            padding: 20px 15px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #822f52;
+            box-shadow: 0 9px 0 #b48686;
+            margin: 20px 0 25px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .reset-button {
+            background: #ffddb2;
+            border: 3px solid white;
+            color: #593939;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 12px 45px;
+            border-radius: 70px;
+            cursor: pointer;
+            box-shadow: 0 7px 0 #ad7676;
+            transition: 0.04s;
+        }
+        .reset-button:active { transform: translateY(5px); box-shadow: 0 2px 0 #ad7676; }
+
+        footer { margin-top: 20px; color: #905e74; font-size: 1.1rem; }
+
+        /* hidden audio elements - user must interact first */
+        .sound-toggle {
+            background: #ffc2d9;
+            border: 2px solid white;
+            border-radius: 40px;
+            padding: 6px 18px;
+            font-size: 1.2rem;
+            color: #451f2b;
+            cursor: pointer;
+            display: inline-block;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 0 #ad6f6f;
+        }
+    </style>
+</head>
+<body id="mainBody">
+<div class="game-box">
+    <h1>❤️‍🔥 love // hate ❤️‍🔥</h1>
+    <div class="sound-toggle" id="soundToggle">🔊 sounds on</div>
+
+    <div class="scores">
+        <div class="love-score" id="loveCard"><span>💖</span> <span id="loveDisplay">0</span></div>
+        <div class="hate-score" id="hateCard"><span>💔</span> <span id="hateDisplay">0</span></div>
+    </div>
+
+    <div class="play-area" id="arena">
+        <button class="big-btn love-btn" id="loveButton">i think i love you</button>
+        <button class="big-btn hate-btn" id="hateButton">or do i hate you?</button>
+    </div>
+
+    <div class="big-message" id="finalVerdict">first to 15 decides</div>
+
+    <button class="reset-button" id="resetAll">⟲ start over</button>
+    <footer>❤️ they run faster when winning · collide & bounce 💔</footer>
+</div>
+
+<script>
+    (function() {
+        // ---------- configuration ----------
+        const GOAL = 15;
+        let loveScore = 0, hateScore = 0;
+        let gameActive = true;
+        let soundEnabled = true;   // user can toggle
+
+        // ---------- DOM elements ----------
+        const body = document.getElementById('mainBody');
+        const arena = document.getElementById('arena');
+        const loveBtn = document.getElementById('loveButton');
+        const hateBtn = document.getElementById('hateButton');
+        const loveSpan = document.getElementById('loveDisplay');
+        const hateSpan = document.getElementById('hateDisplay');
+        const verdictDiv = document.getElementById('finalVerdict');
+        const loveCard = document.getElementById('loveCard');
+        const hateCard = document.getElementById('hateCard');
+        const soundToggle = document.getElementById('soundToggle');
+
+        // ---------- audio (simple web audio beeps, because no external files) ----------
+        function playPop(highPitch = true) {
+            if (!soundEnabled) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = highPitch ? 880 : 440; // A5 or A4
+                gain.gain.value = 0.1;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+                // resume if suspended (browser autoplay policy)
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) {}
+        }
+
+        function playBump() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, ctx.currentTime);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+                if (ctx.state === 'suspended') ctx.resume();
+            } catch (e) {}
+        }
+
+        function playWinTune(which) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = which === 'love' ? 740 : 370;
+                gain.gain.value = 0.15;
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(now + 0.4);
+                if (ctx.state === 'suspended') ctx.resume();
+            } catch (e) {}
+        }
+
+        // sound toggle
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundToggle.innerText = soundEnabled ? '🔊 sounds on' : '🔇 sounds off';
+        });
+
+        // ---------- emotional text pools ----------
+        const loveTexts = [
+            "i think i love you", "i really love you", "you're growing on me",
+            "my heart beats", "i adore you", "you're special", "i might love you",
+            "total crush", "can't stop thinking", "love love love"
+        ];
+        const hateTexts = [
+            "or do i hate you?", "this is annoying", "i doubt it", "you irritate me",
+            "maybe i hate", "not sure at all", "i'm skeptical", "ugh, you",
+            "feeling cold", "i resent you"
+        ];
+
+        function updateButtonTexts() {
+            if (!gameActive) return;
+            // pick based on score: more intense as score grows
+            let loveIndex = Math.min(Math.floor(loveScore / 2), loveTexts.length - 1);
+            let hateIndex = Math.min(Math.floor(hateScore / 2), hateTexts.length - 1);
+            loveBtn.innerText = loveTexts[loveIndex] || "i love u";
+            hateBtn.innerText = hateTexts[hateIndex] || "i hate u";
+        }
+
+        // ---------- emotional color shift ----------
+        function updateColorShift() {
+            if (!gameActive) {
+                // keep final mood
+                return;
+            }
+            const total = loveScore + hateScore;
+            if (total === 0) {
+                body.style.background = '#e8d1d1';
+                return;
+            }
+            const loveRatio = loveScore / (loveScore + hateScore);
+            // blend from cool (#6f9ebf) to warm (#f1b0b0)
+            const r = Math.round(175 + (loveRatio * 80)); // 175->255
+            const g = Math.round(150 + (loveRatio * 40));
+            const b = Math.round(190 - (loveRatio * 60));
+            body.style.background = `rgb(${r}, ${g}, ${b})`;
+
+            // also card background tint
+            loveCard.style.background = loveScore > hateScore ? '#ffe0f0' : '#ffeef2';
+            hateCard.style.background = hateScore > loveScore ? '#d9eaff' : '#ffeef2';
+        }
+
+        // ---------- movement & collision ----------
+        let usingAbsolute = false;
+        let arenaRect = arena.getBoundingClientRect();
+        let loveRect = loveBtn.getBoundingClientRect();
+        let hateRect = hateBtn.getBoundingClientRect();
+
+        function refreshRects() {
+            arenaRect = arena.getBoundingClientRect();
+            loveRect = loveBtn.getBoundingClientRect();
+            hateRect = hateBtn.getBoundingClientRect();
+        }
+
+        function clampPosition(x, y, w, h) {
+            const minPad = 15;
+            const maxX = arenaRect.width - w - minPad;
+            const maxY = arenaRect.height - h - minPad;
+            if (maxX < minPad || maxY < minPad) return { x: minPad, y: minPad };
+            return {
+                x: Math.min(maxX, Math.max(minPad, x)),
+                y: Math.min(maxY, Math.max(minPad, y))
+            };
+        }
+
+        // variable speed factor (winning side moves faster)
+        function getSpeedFactor(forLove) {
+            if (!gameActive) return 1;
+            if (forLove) {
+                return loveScore > hateScore ? 1.5 : (loveScore < hateScore ? 0.6 : 1.0);
+            } else {
+                return hateScore > loveScore ? 1.5 : (hateScore < loveScore ? 0.6 : 1.0);
+            }
+        }
+
+        function jumpButton(btn, rect, forLove) {
+            if (!usingAbsolute || !gameActive) return;
+            refreshRects();
+            const speed = getSpeedFactor(forLove);
+            // base random jump, but speed influences range (faster = wider)
+            const rangeX = (arenaRect.width - rect.width - 40) * speed;
+            const rangeY = (arenaRect.height - rect.height - 40) * speed;
+            const rawX = 15 + Math.random() * Math.max(30, rangeX);
+            const rawY = 15 + Math.random() * Math.max(30, rangeY);
+            const clamped = clampPosition(rawX, rawY, rect.width, rect.height);
+            btn.style.left = clamped.x + 'px';
+            btn.style.top = clamped.y + 'px';
+        }
+
+        // collision detection & bounce
+        function checkCollisionAndBounce() {
+            if (!usingAbsolute || !gameActive) return;
+            refreshRects();
+
+            const l = parseFloat(loveBtn.style.left) || 20;
+            const t = parseFloat(loveBtn.style.top) || 20;
+            const l2 = parseFloat(hateBtn.style.left) || 20;
+            const t2 = parseFloat(hateBtn.style.top) || 20;
+
+            const loveW = loveRect.width, loveH = loveRect.height;
+            const hateW = hateRect.width, hateH = hateRect.height;
+
+            // AABB collision
+            if (l < l2 + hateW && l + loveW > l2 && t < t2 + hateH && t + loveH > t2) {
+                // bounce: swap positions roughly
+                playBump();
+                const newLoveX = Math.min(arenaRect.width - loveW - 15, Math.max(15, l2 + 30));
+                const newLoveY = Math.min(arenaRect.height - loveH - 15, Math.max(15, t2 - 20));
+                const newHateX = Math.min(arenaRect.width - hateW - 15, Math.max(15, l + 30));
+                const newHateY = Math.min(arenaRect.height - hateH - 15, Math.max(15, t - 20));
+
+                loveBtn.style.left = clampPosition(newLoveX, newLoveY, loveW, loveH).x + 'px';
+                loveBtn.style.top = clampPosition(newLoveX, newLoveY, loveW, loveH).y + 'px';
+                hateBtn.style.left = clampPosition(newHateX, newHateY, hateW, hateH).x + 'px';
+                hateBtn.style.top = clampPosition(newHateX, newHateY, hateW, hateH).y + 'px';
+            }
+        }
+
+        function jumpBoth() {
+            if (!gameActive) return;
+            jumpButton(loveBtn, loveRect, true);
+            jumpButton(hateBtn, hateRect, false);
+            // after moving, check collision
+            setTimeout(checkCollisionAndBounce, 30);
+        }
+
+        function turnOnAbsolute() {
+            if (usingAbsolute) return;
+            refreshRects();
+            const lovePos = loveBtn.getBoundingClientRect();
+            const hatePos = hateBtn.getBoundingClientRect();
+            let loveX = lovePos.left - arenaRect.left;
+            let loveY = lovePos.top - arenaRect.top;
+            let hateX = hatePos.left - arenaRect.left;
+            let hateY = hatePos.top - arenaRect.top;
+
+            const loveClamp = clampPosition(loveX, loveY, lovePos.width, lovePos.height);
+            const hateClamp = clampPosition(hateX, hateY, hatePos.width, hatePos.height);
+
+            loveBtn.style.position = 'absolute';
+            loveBtn.style.left = loveClamp.x + 'px';
+            loveBtn.style.top = loveClamp.y + 'px';
+            hateBtn.style.position = 'absolute';
+            hateBtn.style.left = hateClamp.x + 'px';
+            hateBtn.style.top = hateClamp.y + 'px';
+            loveBtn.style.margin = '0';
+            hateBtn.style.margin = '0';
+            arena.style.position = 'relative';
+            usingAbsolute = true;
+        }
+
+        // ---------- scoring & endings (multiple endings) ----------
+        function getEndingMessage(love, hate) {
+            if (love >= GOAL && hate >= GOAL) return "💞 total confusion... love-hate? 💞";
+            if (love >= GOAL) {
+                let diff = love - hate;
+                if (diff >= 10) return "🔥 OBSESSION 🔥";
+                if (diff >= 5) return "💘 deeply in love 💘";
+                return "💗 i think i love you 💗";
+            }
+            if (hate >= GOAL) {
+                let diff = hate - love;
+                if (diff >= 10) return "💢 absolute hatred 💢";
+                if (diff >= 5) return "🖤 deep resentment 🖤";
+                return "💔 i do hate you 💔";
+            }
+            return "first to 15 decides";
+        }
+
+        function addPoints(loveInc, hateInc) {
+            if (!gameActive) return;
+            loveScore += loveInc;
+            hateScore += hateInc;
+            if (loveScore > GOAL) loveScore = GOAL;
+            if (hateScore > GOAL) hateScore = GOAL;
+
+            loveSpan.innerText = loveScore;
+            hateSpan.innerText = hateScore;
+
+            playPop(loveInc > 0); // love = high pitch, hate = low
+
+            updateButtonTexts();
+            updateColorShift();
+
+            // check winner
+            if (loveScore >= GOAL || hateScore >= GOAL) {
+                gameActive = false;
+                verdictDiv.innerText = getEndingMessage(loveScore, hateScore);
+                playWinTune(loveScore >= GOAL ? 'love' : 'hate');
+                // freeze buttons? they stay but no movement
+            } else {
+                let remainLove = GOAL - loveScore;
+                let remainHate = GOAL - hateScore;
+                verdictDiv.innerText = `❤️ need ${remainLove}  ·  💔 need ${remainHate}`;
+            }
+        }
+
+        // ---------- click handlers ----------
+        function onLoveClick(e) {
+            e.stopPropagation();
+            if (!gameActive) return;
+            addPoints(1, 0);
+            loveBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => loveBtn.style.transform = '', 120);
+            if (gameActive) {
+                if (!usingAbsolute) turnOnAbsolute();
+                jumpBoth();
+            }
+        }
+
+        function onHateClick(e) {
+            e.stopPropagation();
+            if (!gameActive) return;
+            addPoints(0, 1);
+            hateBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => hateBtn.style.transform = '', 120);
+            if (gameActive) {
+                if (!usingAbsolute) turnOnAbsolute();
+                jumpBoth();
+            }
+        }
+
+        // mouseenter run (only if game active)
+        function onMouseLove() {
+            if (!gameActive) return;
+            if (!usingAbsolute) turnOnAbsolute();
+            refreshRects();
+            jumpButton(loveBtn, loveRect, true);
+            setTimeout(checkCollisionAndBounce, 40);
+        }
+        function onMouseHate() {
+            if (!gameActive) return;
+            if (!usingAbsolute) turnOnAbsolute();
+            refreshRects();
+            jumpButton(hateBtn, hateRect, false);
+            setTimeout(checkCollisionAndBounce, 40);
+        }
+
+        // reset
+        function resetAll() {
+            loveScore = 0; hateScore = 0;
+            gameActive = true;
+            loveSpan.innerText = '0'; hateSpan.innerText = '0';
+            verdictDiv.innerText = 'first to 15 decides';
+            loveBtn.innerText = 'i think i love you';
+            hateBtn.innerText = 'or do i hate you?';
+            body.style.background = '#e8d1d1';
+            loveCard.style.background = '#ffeef2';
+            hateCard.style.background = '#ffeef2';
+            if (usingAbsolute) {
+                refreshRects();
+                jumpBoth();
+            }
+        }
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            if (!usingAbsolute) return;
+            refreshRects();
+            let loveX = parseFloat(loveBtn.style.left) || 20;
+            let loveY = parseFloat(loveBtn.style.top) || 20;
+            let hateX = parseFloat(hateBtn.style.left) || 20;
+            let hateY = parseFloat(hateBtn.style.top) || 20;
+            const loveClamp = clampPosition(loveX, loveY, loveRect.width, loveRect.height);
+            const hateClamp = clampPosition(hateX, hateY, hateRect.width, hateRect.height);
+            loveBtn.style.left = loveClamp.x + 'px';
+            loveBtn.style.top = loveClamp.y + 'px';
+            hateBtn.style.left = hateClamp.x + 'px';
+            hateBtn.style.top = hateClamp.y + 'px';
+        });
+
+        // event listeners
+        loveBtn.addEventListener('click', onLoveClick);
+        hateBtn.addEventListener('click', onHateClick);
+        loveBtn.addEventListener('mouseenter', onMouseLove);
+        hateBtn.addEventListener('mouseenter', onMouseHate);
+        document.getElementById('resetAll').addEventListener('click', resetAll);
+
+        // init
+        turnOnAbsolute();
+        setTimeout(() => {
+            if (usingAbsolute) { refreshRects(); jumpBoth(); }
+        }, 60);
+        window.addEventListener('load', () => { refreshRects(); jumpBoth(); });
+    })();
+</script>
+</body>
+</html>
